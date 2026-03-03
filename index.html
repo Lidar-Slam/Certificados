@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Verifica la autenticidad de tu certificado LIDAR SLAM">
   <title>Verificar Certificado | LIDAR SLAM</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -27,9 +26,8 @@
     .result-item h4 { color: #2c5282; margin-bottom: 10px; }
     .result-item p { margin: 5px 0; color: #444; }
     .btn-group { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-    .btn-ver, .btn-descargar { display: inline-block; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 0.9rem; }
-    .btn-ver { background: #3182ce; color: white; }
-    .btn-descargar { background: #38a169; color: white; }
+    .btn-ver { background: #3182ce; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; }
+    .btn-descargar { background: #38a169; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; }
     .hash-code { background: #edf2f7; padding: 3px 8px; border-radius: 4px; font-family: monospace; font-size: 0.85rem; }
     @media (max-width: 600px) { .form-group { flex-direction: column; } button { width: 100%; } }
   </style>
@@ -40,7 +38,6 @@
       <img src="assets/Logo_Lidar_Slam.jpg" alt="LIDAR SLAM Logo" onerror="this.style.display='none'">
       <h1>Verificar Certificado LIDAR SLAM</h1>
     </div>
-    
     <div class="content">
       <p class="subtitle">Ingrese su DNI para verificar la autenticidad de su certificado.</p>
       <form id="formVerificar">
@@ -51,51 +48,41 @@
       </form>
       <div id="resultado"></div>
     </div>
-    
     <footer style="text-align: center; margin-top: 30px; color: #777; font-size: 0.9rem;">
       <p>© 2026 LIDAR SLAM - Sistema de Verificación de Certificados</p>
     </footer>
   </div>
 
   <script>
-    // ⚠️ REEMPLAZA CON TU URL DE APPS SCRIPT
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbylHyJxpYd0R9JsdxH5BSOT67BPAkFlsyNh_zF7SAPhCGoopJ9-bANMNwQHtfE3CF_2cg/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwsPRfB4sj1qyjmDbAPZioaiPeH5GyBR-aHgUHoFxXHmbLY5TgxnIOotDToMXt7aDK4/exec';
     
     document.getElementById('formVerificar').addEventListener('submit', (e) => {
       e.preventDefault();
       const dni = document.getElementById('dni').value.trim();
       const resultado = document.getElementById('resultado');
-      resultado.innerHTML = '<p style="text-align:center; color:#555;">🔄 Buscando en la base de datos...</p>';
-  
+      resultado.innerHTML = '<p style="text-align:center; color:#555;">🔄 Buscando...</p>';
+      
       const oldScript = document.getElementById('data-script');
       if (oldScript) oldScript.remove();
-  
+      
       window.handleResponse = (data) => {
         const certificados = data.filter(c => 
           String(c.DNI).trim() === String(dni).trim() && 
           String(c.Estado).trim().toLowerCase() === 'activo'
         );
-  
+        
         if (certificados.length === 0) {
-          resultado.innerHTML = `
-            <div class="error">
-              <h3>❌ No encontrado</h3>
-              <p>No se encontró ningún certificado <strong>activo</strong> con el DNI <strong>${dni}</strong>.</p>
-            </div>
-          `;
+          resultado.innerHTML = `<div class="error"><h3>❌ No encontrado</h3><p>No se encontró certificado activo con DNI <strong>${dni}</strong>.</p></div>`;
           return;
         }
-  
+        
         const itemsHTML = certificados.map((cert, index) => {
           let fechaFmt = cert.Fecha;
           if (fechaFmt instanceof Date) fechaFmt = fechaFmt.toLocaleDateString('es-PE');
           else if (typeof fechaFmt === 'string' && fechaFmt.includes('T')) fechaFmt = fechaFmt.split('T')[0];
           
-          const identificador = (cert.QR_Code_Hash && String(cert.QR_Code_Hash).trim()) 
-            ? String(cert.QR_Code_Hash).trim() 
-            : String(cert.ID_Certificado || '').trim();
-          
-          const verificarURL = `verificar.html?hash=${encodeURIComponent(identificador)}`;
+          const hash = (cert.QR_Code_Hash && String(cert.QR_Code_Hash).trim()) ? String(cert.QR_Code_Hash).trim() : String(cert.ID_Certificado || '').trim();
+          const verificarURL = `verificar.html?hash=${encodeURIComponent(hash)}`;
           const pdfURL = cert.PDF ? `certificados/${cert.PDF}` : '#';
           
           return `
@@ -105,21 +92,18 @@
             <p><strong>Nombre:</strong> ${cert.Nombre_Completo || '—'}</p>
             <p><strong>Evento:</strong> ${cert.Evento || '—'}</p>
             <p><strong>Fecha:</strong> ${fechaFmt || '—'}</p>
-            <p><strong>Modalidad:</strong> ${cert.Modalidad || '—'}</p>
-            <p><strong>Estado:</strong> <span style="color:${cert.Estado==='Activo'?'#38a169':'#e53e3e'}; font-weight:500;">${cert.Estado || '—'}</span></p>
-            
+            <p><strong>Estado:</strong> <span style="color:${cert.Estado==='Activo'?'#38a169':'#e53e3e'}">${cert.Estado || '—'}</span></p>
             <div class="btn-group">
-              ${identificador ? `<a href="${verificarURL}" target="_blank" class="btn-ver">👁️ Ver certificado</a>` : ''}
+              <a href="${verificarURL}" target="_blank" class="btn-ver">👁️ Ver Certificado</a>
               ${cert.PDF ? `<a href="${pdfURL}" target="_blank" class="btn-descargar">⬇️ Descargar PDF</a>` : ''}
             </div>
-            ${identificador ? `<p style="margin-top:10px; font-size:0.85rem; color:#777;"><strong>Hash QR:</strong> <span class="hash-code">${identificador}</span></p>` : ''}
-          </div>
-          `;
+            <p style="margin-top:10px; font-size:0.85rem; color:#777;"><strong>Hash:</strong> <span class="hash-code">${hash}</span></p>
+          </div>`;
         }).join('');
-  
+        
         resultado.innerHTML = `<div class="result"><h3>✅ Se encontraron ${certificados.length} certificado${certificados.length > 1 ? 's' : ''}</h3>${itemsHTML}</div>`;
       };
-  
+      
       const script = document.createElement('script');
       script.id = 'data-script';
       script.src = `${APPS_SCRIPT_URL}?callback=handleResponse`;
@@ -132,3 +116,4 @@
   </script>
 </body>
 </html>
+
