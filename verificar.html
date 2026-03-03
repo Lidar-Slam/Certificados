@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Validación de certificado LIDAR SLAM">
   <title>Validando Certificado | LIDAR SLAM</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -22,13 +21,11 @@
     .cert-info strong { color: #2c5282; }
     .btn { display: inline-block; margin-top: 20px; padding: 12px 28px; background: linear-gradient(135deg, #2c5282, #1a3a6c); color: white; text-decoration: none; border-radius: 8px; font-weight: 500; }
     .btn:hover { background: #1a3a6c; }
-    .btn-outline { background: transparent; border: 2px solid #2c5282; color: #2c5282; margin-left: 10px; }
-    .btn-outline:hover { background: #2c5282; color: white; }
     .hash-badge { background: #edf2f7; padding: 6px 12px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 0.85rem; color: #555; word-break: break-all; display: inline-block; margin-top: 5px; }
-    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+    .debug-info { background: #f8fafc; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 0.85rem; color: #666; }
+    .debug-info code { background: #edf2f7; padding: 2px 6px; border-radius: 4px; }
     footer { margin-top: 35px; text-align: center; color: #777; font-size: 0.9rem; padding-top: 20px; border-top: 1px solid #eee; }
     footer a { color: #2c5282; text-decoration: none; font-weight: 500; }
-    @media (max-width: 600px) { .btn-group { flex-direction: column; } .btn-outline { margin-left: 0; margin-top: 10px; } }
   </style>
 </head>
 <body>
@@ -47,12 +44,14 @@
 
   <script>
     // ⚠️ REEMPLAZA CON TU URL DE APPS SCRIPT
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwsPRfB4sj1qyjmDbAPZioaiPeH5GyBR-aHgUHoFxXHmbLY5TgxnIOotDToMXt7aDK4/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbylHyJxpYd0R9JsdxH5BSOT67BPAkFlsyNh_zF7SAPhCGoopJ9-bANMNwQHtfE3CF_2cg/exec';
 
     const urlParams = new URLSearchParams(window.location.search);
     const hash = urlParams.get('hash') || urlParams.get('id');
     const content = document.getElementById('content');
     const loading = document.getElementById('loading');
+
+    console.log('🔍 Hash en URL:', hash);
 
     if (!hash) {
       loading.style.display = 'none';
@@ -69,12 +68,20 @@
       fetch(`${APPS_SCRIPT_URL}?callback=handleHashResponse`)
         .then(res => res.text())
         .then(text => {
+          console.log('📦 Respuesta raw:', text.substring(0, 500));
           const jsonMatch = text.match(/\(([\s\S]*)\);?$/);
           const data = jsonMatch ? JSON.parse(jsonMatch[1]) : JSON.parse(text);
+          console.log('📊 Datos parseados:', data);
+          console.log('📊 Total registros:', data.length);
+          if (data.length > 0) {
+            console.log('📊 Primer registro:', data[0]);
+            console.log('📊 Columnas disponibles:', Object.keys(data[0]));
+          }
           handleHashResponse(data);
         })
         .catch(err => {
           loading.style.display = 'none';
+          console.error('❌ Error:', err);
           content.innerHTML = `<div class="error"><h3>❌ Error de Conexión</h3><p>${err.message}</p><p style="margin-top: 15px;"><a href="index.html" class="btn">Volver al Inicio</a></p></div>`;
         });
     }
@@ -87,18 +94,38 @@
         return;
       }
       
+      // 🔍 Debug: mostrar todos los hashes en la base de datos
+      const todosLosHashes = data.map(c => c.QR_Code_Hash || c.ID_Certificado).filter(h => h);
+      console.log('🔐 Todos los hashes en Sheets:', todosLosHashes);
+      console.log('🔐 Hash buscado:', hash);
+      
       const certificado = data.find(c => {
         const hashCert = String(c.QR_Code_Hash || c.ID_Certificado || '').trim();
         const hashBuscado = String(hash).trim();
         const estado = String(c.Estado || '').trim().toLowerCase();
+        
+        console.log('🔎 Comparando:', { hashCert, hashBuscado, estado, match: hashCert === hashBuscado && estado === 'activo' });
+        
         return hashCert === hashBuscado && estado === 'activo';
       });
 
       if (!certificado) {
+        // Mostrar información de debug para el usuario
         content.innerHTML = `
           <div class="error">
             <h3>❌ Certificado No Válido</h3>
             <p>No se encontró un certificado <strong>activo</strong> con este hash de verificación.</p>
+            <div class="debug-info">
+              <p><strong>Hash buscado:</strong> <code>${hash}</code></p>
+              <p><strong>Total registros en Sheets:</strong> <code>${data.length}</code></p>
+              <p><strong>Registros con QR_Code_Hash:</strong> <code>${data.filter(c => c.QR_Code_Hash).length}</code></p>
+              <p><strong>Posibles causas:</strong></p>
+              <ul style="margin-top: 10px; padding-left: 20px;">
+                <li>El hash en la URL no coincide con el de Google Sheets</li>
+                <li>El certificado tiene Estado diferente a "Activo"</li>
+                <li>La columna se llama diferente en Sheets (ej: "QR_Code_Hash " con espacio)</li>
+              </ul>
+            </div>
             <p style="margin-top: 20px;"><a href="index.html" class="btn">Volver al Buscador por DNI</a></p>
           </div>
         `;
@@ -125,9 +152,9 @@
             <p><strong>Hash QR:</strong><br><span class="hash-badge">${certificado.QR_Code_Hash || certificado.ID_Certificado}</span></p>
           </div>
           ${certificado.PDF ? `
-            <div class="btn-group">
+            <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
               <a href="${pdfURL}" target="_blank" class="btn">👁️ Ver PDF</a>
-              <a href="${pdfURL}" download class="btn btn-outline">⬇️ Descargar</a>
+              <a href="${pdfURL}" download class="btn" style="background: transparent; border: 2px solid #2c5282; color: #2c5282;">⬇️ Descargar</a>
             </div>
           ` : ''}
         </div>
