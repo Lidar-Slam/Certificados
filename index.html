@@ -61,7 +61,7 @@
           <div class="result-item">
             <h4>📄 Certificado #${index + 1}</h4>
             <p><strong>Nombre:</strong> ${cert.Nombre_Completo || '—'}</p>
-            <p><strong>ID:</strong> ${ID_Certificado || '—'}</p>
+            <p><strong>ID:</strong> ${cert.ID_Certificado || '—'}</p>
             <p><strong>Fecha:</strong> ${(cert.Fecha || '').split('T')[0] || '—'}</p>
             <p><strong>Estado:</strong> ${cert.Estado || '—'}</p>
             <div class="btn-group">
@@ -84,13 +84,14 @@
       // Añadir el script dinámicamente (corregido: sin espacio al inicio de la URL)
       const script = document.createElement('script');
       script.id = 'data-script';
-      script.src = `https://script.google.com/macros/s/AKfycbyrxI8TqHlS0CI8D_ibCOdeHKh7CMryoNeNAxa-DkgMl6DpWxO4ONQzpAtGF5ypMRZMHA/exec?callback=handleResponse`;
+      script.src = `https://script.google.com/macros/s/AKfycbwpwqAIh7cn2Vhumwl-y3eB6MBnzP3VuA-xvWWcdEJD8twnGzj49P85mGH7NL23YuAG6A/exec?callback=handleResponse`;
       document.head.appendChild(script);
     });
   </script>
   
 </body>
 </html> 
+
 
 
 
