@@ -1,269 +1,96 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <meta name="description" content="Verifica certificados LIDAR SLAM con hash único">
-  <title>LIDAR SLAM - Verificación de Certificados</title>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" as="style">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Verifica la autenticidad de tu certificado ATP">
+  <title>Verificar Certificado | ATP</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Roboto',sans-serif;background:#f5f7fa;color:#333;line-height:1.6;min-height:100vh}.container{max-width:800px;margin:0 auto;padding:20px}.header{text-align:center;padding:30px 0;background:linear-gradient(135deg,#1a3a6c,#2c5282);color:#fff;border-radius:12px;margin-bottom:30px}.header img{height:90px;margin-bottom:15px}.header h1{font-size:1.8rem;font-weight:700}.content{background:#fff;padding:25px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08)}.subtitle{text-align:center;color:#555;margin-bottom:25px;font-size:1.1rem}.form-group{display:flex;gap:10px;flex-wrap:wrap}#dni{flex:1;min-width:200px;padding:12px 15px;border:2px solid #ddd;border-radius:8px;font-size:1rem}#dni:focus{outline:none;border-color:#2c5282}button{background:#2c5282;color:#fff;border:none;padding:12px 25px;border-radius:8px;font-weight:500;cursor:pointer;transition:background .3s}button:hover{background:#1a3a6c}button:disabled{background:#ccc;cursor:not-allowed}#resultado{margin-top:25px}.result{background:#f0f9ff;border-left:4px solid #3182ce;padding:15px;border-radius:0 8px 8px 0}.error{background:#fff5f5;border-left:4px solid #e53e3e;padding:15px;border-radius:0 8px 8px 0}.result-item{background:#fff;padding:15px;margin:15px 0;border-radius:8px;border:1px solid #eee}.result-item h4{color:#2c5282;margin-bottom:10px}.result-item p{margin:5px 0;color:#444}.btn-group{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}.btn-ver{background:#3182ce;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:500;display:inline-block}.btn-descargar{background:#38a169;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:500;display:inline-block}.hash-code{background:#edf2f7;padding:3px 8px;border-radius:4px;font-family:monospace;font-size:.85rem}.loader{border:4px solid #f3f3f3;border-top:4px solid #2c5282;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:20px auto}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}.hash-badge{background:#edf2f7;padding:6px 12px;border-radius:6px;font-family:monospace;font-size:.85rem;color:#555;word-break:break-all;display:inline-block;margin-top:5px}.cert-valid{background:linear-gradient(135deg,#f0f9ff,#e6f4f1);border-left:5px solid #3182ce;padding:25px;border-radius:0 12px 12px 0;margin:25px 0}.cert-valid h3{color:#38a169;margin-bottom:15px;font-size:1.3rem}footer{margin-top:35px;text-align:center;color:#777;font-size:.9rem;padding-top:20px;border-top:1px solid #eee}footer a{color:#2c5282;text-decoration:none;font-weight:500}@media(max-width:600px){.form-group{flex-direction:column}button{width:100%}.btn-group{flex-direction:column}.btn-descargar{margin-left:0}}
-  </style>
+  <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <img src="assets/Logo_Lidar_Slam.jpg" alt="LIDAR SLAM" onerror="this.style.display='none'">
-      <h1>🛰️ Verificación LIDAR SLAM</h1>
+      <!-- Logo ATP -->
+      <img src="assets/Logo_Lidar_Slam.jpg" alt="ATP Logo" style="height: 90px;">
+      <h1>Verificar Certificado</h1>
     </div>
-    
-    <!-- Sección de búsqueda por DNI -->
-    <div id="searchSection" class="content">
-      <p class="subtitle">Ingrese su DNI para buscar su certificado.</p>
+    <div class="content">
+      <p class="subtitle">Ingrese su DNI para verificar la autenticidad de su certificado.</p>
+
       <form id="formVerificar">
         <div class="form-group">
-          <input type="text" id="dni" placeholder="DNI (8 dígitos)" required maxlength="8" pattern="\d{8}" inputmode="numeric">
-          <button type="submit" id="btnBuscar">🔍 Buscar</button>
+          <input type="text" id="dni" name="dni" placeholder="Ingrese su DNI" required />
+          <button type="submit">Buscar</button>
         </div>
       </form>
+
       <div id="resultado"></div>
     </div>
-    
-    <!-- Sección de validación por hash (QR) -->
-    <div id="hashSection" style="display:none">
-      <div id="loading" class="loader"></div>
-      <div id="hashContent"></div>
-    </div>
-    
-    <footer>
-      <p>© 2026 LIDAR SLAM - Sistema de Certificados</p>
-      <p id="footerLink" style="margin-top:10px;display:none"><a href="index.html">← Volver al buscador</a></p>
-    </footer>
   </div>
-
   <script>
-    // ⚠️ REEMPLAZA CON TU NUEVA URL DE APPS SCRIPT (después de re-desplegar)
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyrxI8TqHlS0CI8D_ibCOdeHKh7CMryoNeNAxa-DkgMl6DpWxO4ONQzpAtGF5ypMRZMHA/exec';
-    
-    // ✅ Caché en memoria
-    const cache = new Map();
-    
-    // ✅ Detectar hash en URL (para verificación directa por QR)
-    const urlParams = new URLSearchParams(window.location.search);
-    const hash = urlParams.get('hash') || urlParams.get('id');
-    
-    // Elementos DOM
-    const searchSection = document.getElementById('searchSection');
-    const hashSection = document.getElementById('hashSection');
-    const hashContent = document.getElementById('hashContent');
-    const loading = document.getElementById('loading');
-    const footerLink = document.getElementById('footerLink');
-    
-    // ✅ Si hay hash → modo validación directa (QR escaneado)
-    if (hash) {
-      searchSection.style.display = 'none';
-      hashSection.style.display = 'block';
-      footerLink.style.display = 'block';
-      validarPorHash(hash);
-    }
-    
-    // ✅ Si NO hay hash → modo búsqueda por DNI
-    if (!hash) {
-      document.getElementById('formVerificar').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const dni = document.getElementById('dni').value.trim();
-        const resultado = document.getElementById('resultado');
-        const btn = document.getElementById('btnBuscar');
-        
-        resultado.innerHTML = '<p style="text-align:center;color:#555">🔄 Buscando...</p>';
-        btn.disabled = true;
-        btn.textContent = '⏳ Buscando...';
-        
-        try {
-          // ✅ Usar caché si ya se consultó
-          if (cache.has(dni)) {
-            mostrarResultados(cache.get(dni), dni);
-            btn.disabled = false;
-            btn.textContent = '🔍 Buscar';
-            return;
-          }
-          
-          // ✅ JSONP con etiqueta <script> (NO fetch) - esto evita CORS
-          const script = document.createElement('script');
-          script.src = `${APPS_SCRIPT_URL}?callback=handleResponse`;
-          script.id = 'apps-script-fetch';
-          
-          // Timeout para evitar bloqueos
-          const timeout = setTimeout(() => {
-            script.remove();
-            resultado.innerHTML = `<div class="error"><h3>⚠️ Timeout</h3><p>La consulta tardó demasiado. Intenta de nuevo.</p></div>`;
-            btn.disabled = false;
-            btn.textContent = '🔍 Buscar';
-          }, 8000);
-          
-          // ✅ Callback global para JSONP
-          window.handleResponse = (data) => {
-            clearTimeout(timeout);
-            script.remove();
-            delete window.handleResponse;
-            
-            // Guardar en caché y mostrar
-            cache.set(dni, data || []);
-            mostrarResultados(data || [], dni);
-            btn.disabled = false;
-            btn.textContent = '🔍 Buscar';
-          };
-          
-          // Manejar errores de carga del script
-          script.onerror = () => {
-            clearTimeout(timeout);
-            script.remove();
-            delete window.handleResponse;
-            resultado.innerHTML = `<div class="error"><h3>❌ Error de conexión</h3><p>No se pudo conectar con la base de datos. Verifica tu conexión o intenta más tarde.</p></div>`;
-            btn.disabled = false;
-            btn.textContent = '🔍 Buscar';
-          };
-          
-          document.head.appendChild(script);
-          
-        } catch (err) {
-          console.error('❌ Error:', err);
-          resultado.innerHTML = `<div class="error"><h3>⚠️ Error</h3><p>Ocurrió un error inesperado. Intenta de nuevo.</p></div>`;
-          btn.disabled = false;
-          btn.textContent = '🔍 Buscar';
-        }
-      });
-      
-      // ✅ Validación en tiempo real del DNI
-      document.getElementById('dni').addEventListener('input', function(e) {
-        this.value = this.value.replace(/\D/g, '').slice(0, 8);
-      });
-    }
-    
-    // ✅ Función para mostrar resultados de búsqueda por DNI
-    function mostrarResultados(data, dni) {
+    document.getElementById('formVerificar').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const dni = document.getElementById('dni').value.trim();
       const resultado = document.getElementById('resultado');
-      
-      // Filtrar certificados activos con ese DNI
-      const activos = (data || []).filter(c => 
-        c && String(c.DNI).trim() === dni && String(c.Estado).trim().toLowerCase() === 'activo'
-      );
-      
-      if (activos.length === 0) {
-        resultado.innerHTML = `<div class="error"><h3>❌ No encontrado</h3><p>No hay certificado activo con DNI <strong>${dni}</strong>.</p></div>`;
-        return;
-      }
-      
-      // ✅ Renderizado optimizado con DocumentFragment
-      const fragment = document.createDocumentFragment();
-      const container = document.createElement('div');
-      container.className = 'result';
-      container.innerHTML = `<h3>✅ ${activos.length} certificado${activos.length>1?'s':''} encontrado${activos.length>1?'s':''}</h3>`;
-      
-      activos.forEach((cert, index) => {
-        const fecha = cert.Fecha ? (cert.Fecha instanceof Date ? cert.Fecha.toLocaleDateString('es-PE') : String(cert.Fecha).split('T')[0]) : '—';
-        const hashCert = (cert.QR_Code_Hash && String(cert.QR_Code_Hash).trim()) ? String(cert.QR_Code_Hash).trim() : String(cert.ID_Certificado || '').trim();
-        const pdfURL = cert.PDF ? `certificados/${cert.PDF}` : '#';
-        
-        const item = document.createElement('div');
-        item.className = 'result-item';
-        item.innerHTML = `
-          <h4>📄 Certificado #${index+1}</h4>
-          <p><strong>ID:</strong> ${cert.ID_Certificado||'—'}</p>
-          <p><strong>Nombre:</strong> ${cert.Nombre_Completo||'—'}</p>
-          <p><strong>Evento:</strong> ${cert.Evento||'—'}</p>
-          <p><strong>Fecha:</strong> ${fecha}</p>
-          <p><strong>Modalidad:</strong> ${cert.Modalidad||'—'}</p>
-          <p><strong>Estado:</strong> <span style="color:${cert.Estado==='Activo'?'#38a169':'#e53e3e'};font-weight:500">${cert.Estado||'—'}</span></p>
-          <div class="btn-group">
-            <a href="${pdfURL}" target="_blank" class="btn-ver">👁️ Ver Certificado</a>
-            ${cert.PDF ? `<a href="${pdfURL}" download class="btn-descargar">⬇️ Descargar PDF</a>` : ''}
-          </div>
-          ${hashCert ? `<p style="margin-top:10px;font-size:.85rem;color:#777"><strong>Hash:</strong> <span class="hash-code">${hashCert}</span></p>` : ''}
-        `;
-        container.appendChild(item);
-      });
-      
-      fragment.appendChild(container);
-      resultado.innerHTML = '';
-      resultado.appendChild(fragment);
-    }
-    
-    // ✅ Función para validar por hash (modo QR directo)
-    function validarPorHash(hashBuscado) {
-      hashContent.innerHTML = `<p style="text-align:center;color:#666;margin:20px 0">Validando: <span class="hash-badge">${hashBuscado}</span></p>`;
-      
-      // ✅ JSONP con etiqueta <script> (NO fetch)
-      const script = document.createElement('script');
-      script.src = `${APPS_SCRIPT_URL}?callback=handleHashResponse`;
-      script.id = 'apps-script-hash';
-      
-      const timeout = setTimeout(() => {
-        script.remove();
-        loading.style.display = 'none';
-        hashContent.innerHTML = `<div class="error"><h3>⚠️ Timeout</h3><p>La consulta tardó demasiado. <a href="index.html">Intentar de nuevo</a></p></div>`;
-      }, 8000);
-      
-      // ✅ Callback global para JSONP
-      window.handleHashResponse = (data) => {
-        clearTimeout(timeout);
-        script.remove();
-        delete window.handleHashResponse;
-        
-        if (!data || !Array.isArray(data)) {
-          loading.style.display = 'none';
-          hashContent.innerHTML = `<div class="error"><h3>❌ Error de formato</h3><p>La base de datos no respondió correctamente.</p><p style="margin-top:20px"><a href="index.html" class="btn-ver">Volver</a></p></div>`;
-          return;
-        }
-        
-        // ✅ Búsqueda optimizada: break al encontrar
-        const cert = data.find(c => {
-          const h = String(c.QR_Code_Hash || c.ID_Certificado || '').trim();
-          return h === hashBuscado.trim() && String(c.Estado).trim().toLowerCase() === 'activo';
-        });
-        
-        if (!cert) {
-          loading.style.display = 'none';
-          hashContent.innerHTML = `<div class="error"><h3>❌ Certificado No Válido</h3><p>No se encontró un certificado activo con este hash.</p><p style="margin-top:20px"><a href="index.html" class="btn-ver">Volver al buscador</a></p></div>`;
-          return;
-        }
-        
-        // Formatear fecha
-        const fecha = cert.Fecha ? (cert.Fecha instanceof Date ? cert.Fecha.toLocaleDateString('es-PE') : String(cert.Fecha).split('T')[0]) : '—';
-        const pdfURL = cert.PDF ? `certificados/${cert.PDF}` : '#';
-        
-        loading.style.display = 'none';
-        hashContent.innerHTML = `
-          <div class="cert-valid">
-            <h3>✅ Certificado Válido</h3>
-            <div class="cert-info">
-              <p><strong>ID:</strong> ${cert.ID_Certificado||'—'}</p>
-              <p><strong>Nombre:</strong> ${cert.Nombre_Completo||'—'}</p>
-              <p><strong>DNI:</strong> ${cert.DNI||'—'}</p>
-              <p><strong>Evento:</strong> ${cert.Evento||'—'}</p>
-              <p><strong>Fecha:</strong> ${fecha}</p>
-              <p><strong>Modalidad:</strong> ${cert.Modalidad||'—'}</p>
-              <p><strong>Estado:</strong> <span style="color:#38a169;font-weight:600">${cert.Estado}</span></p>
-              <p><strong>Hash:</strong><br><span class="hash-badge">${cert.QR_Code_Hash||cert.ID_Certificado}</span></p>
+      resultado.innerHTML = '<p>Buscando...</p>';
+  
+      // Eliminar script anterior para evitar duplicados
+      const oldScript = document.getElementById('data-script');
+      if (oldScript) oldScript.remove();
+  
+      // Definir función que maneja la respuesta (ahora con múltiples resultados)
+      window.handleResponse = (data) => {
+        // Filtrar TODOS los certificados con el DNI ingresado
+        const certificados = data.filter(c => 
+          String(c.DNI).trim() === String(dni).trim()
+        );
+  
+        if (certificados.length === 0) {
+          resultado.innerHTML = `
+            <div class="error">
+              <h3>❌ No encontrado</h3>
+              <p>No se encontró ningún certificado con el DNI <strong>${dni}</strong>.</p>
             </div>
-            ${cert.PDF ? `<div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap"><a href="${pdfURL}" target="_blank" class="btn-ver">👁️ Ver PDF</a><a href="${pdfURL}" download class="btn-ver" style="background:transparent;border:2px solid #2c5282;color:#2c5282">⬇️ Descargar</a></div>` : ''}
-          </div>`;
+          `;
+          return;
+        }
+  
+        // Generar HTML para cada certificado
+        const itemsHTML = certificados.map((cert, index) => `
+          <div class="result-item">
+            <h4>📄 Certificado #${index + 1}</h4>
+            <p><strong>Nombre:</strong> ${cert.Nombre_Completo || '—'}</p>
+            <p><strong>ID:</strong> ${ID_Certificado || '—'}</p>
+            <p><strong>Fecha:</strong> ${(cert.Fecha || '').split('T')[0] || '—'}</p>
+            <p><strong>Estado:</strong> ${cert.Estado || '—'}</p>
+            <div class="btn-group">
+              <a href="certificados/${cert.PDF}" target="_blank" class="btn-ver">Ver certificado</a>
+              <a href="https://asociacion-topografos.github.io/verificar-certificado/certificados/${cert.PDF}" 
+                 download="${cert.Nombre_Completo?.replace(/\s+/g, '_') || 'certificado'}_${cert.ID_Certificado}.pdf" 
+                 class="btn-descargar">Descargar certificado</a>
+            </div>
+          </div>
+        `).join('');
+  
+        resultado.innerHTML = `
+          <div class="result">
+            <h3>✅ Se encontraron ${certificados.length} certificado${certificados.length > 1 ? 's' : ''}</h3>
+            ${itemsHTML}
+          </div>
+        `;
       };
-      
-      script.onerror = () => {
-        clearTimeout(timeout);
-        script.remove();
-        delete window.handleHashResponse;
-        loading.style.display = 'none';
-        hashContent.innerHTML = `<div class="error"><h3>❌ Error de conexión</h3><p>No se pudo conectar con la base de datos. <a href="index.html">Intentar de nuevo</a></p></div>`;
-      };
-      
+  
+      // Añadir el script dinámicamente (corregido: sin espacio al inicio de la URL)
+      const script = document.createElement('script');
+      script.id = 'data-script';
+      script.src = `https://script.google.com/macros/s/AKfycbyrxI8TqHlS0CI8D_ibCOdeHKh7CMryoNeNAxa-DkgMl6DpWxO4ONQzpAtGF5ypMRZMHA/exec?callback=handleResponse`;
       document.head.appendChild(script);
-    }
+    });
   </script>
+  
 </body>
-</html>
+</html> 
 
 
 
