@@ -3,75 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Verifica la autenticidad de tu certificado ATP">
-  <title>Verificar Certificado</title>
+  <meta name="description" content="Verifica la autenticidad de tu certificado LIDAR SLAM">
+  <title>Verificar Certificado | LIDAR SLAM</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Roboto',sans-serif;background:#f5f7fa;color:#333;line-height:1.6}.container{max-width:800px;margin:0 auto;padding:20px}.header{text-align:center;padding:30px 0;background:linear-gradient(135deg,#1a3a6c,#2c5282);color:#fff;border-radius:12px;margin-bottom:30px}.header img{height:90px;margin-bottom:15px}.header h1{font-size:1.8rem;font-weight:700}.content{background:#fff;padding:25px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08)}.subtitle{text-align:center;color:#555;margin-bottom:25px;font-size:1.1rem}.form-group{display:flex;gap:10px;flex-wrap:wrap}#dni{flex:1;min-width:200px;padding:12px 15px;border:2px solid #ddd;border-radius:8px;font-size:1rem}#dni:focus{outline:none;border-color:#2c5282}button{background:#2c5282;color:#fff;border:none;padding:12px 25px;border-radius:8px;font-weight:500;cursor:pointer}button:hover{background:#1a3a6c}#resultado{margin-top:25px}.result{background:#f0f9ff;border-left:4px solid #3182ce;padding:15px;border-radius:0 8px 8px 0}.error{background:#fff5f5;border-left:4px solid #e53e3e;padding:15px;border-radius:0 8px 8px 0}.result-item{background:#fff;padding:15px;margin:15px 0;border-radius:8px;border:1px solid #eee}.result-item h4{color:#2c5282;margin-bottom:10px}.result-item p{margin:5px 0;color:#444}.btn-group{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}.btn-ver{background:#3182ce;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:500}.btn-descargar{background:#38a169;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:500}@media(max-width:600px){.form-group{flex-direction:column}button{width:100%}}
+  </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <!-- Logo ATP -->
-      <img src="assets/Logo_Lidar_Slam.jpg" alt="ATP Logo" style="height: 90px;">
-      <h1>Verificar Certificado</h1>
+      <img src="assets/Logo_Lidar_Slam.jpg" alt="LIDAR SLAM Logo" onerror="this.style.display='none'">
+      <h1>Verificar Certificado LIDAR SLAM</h1>
     </div>
     <div class="content">
       <p class="subtitle">Ingrese su DNI para verificar la autenticidad de su certificado.</p>
-
       <form id="formVerificar">
         <div class="form-group">
-          <input type="text" id="dni" name="dni" placeholder="Ingrese su DNI" required />
-          <button type="submit">Buscar</button>
+          <input type="text" id="dni" name="dni" placeholder="Ingrese su DNI" required maxlength="8" pattern="\d{8}" />
+          <button type="submit">🔍 Buscar</button>
         </div>
       </form>
-
       <div id="resultado"></div>
     </div>
+    <footer style="text-align:center;margin-top:30px;color:#777;font-size:.9rem">
+      <p>© 2026 LIDAR SLAM - Sistema de Verificación de Certificados</p>
+    </footer>
   </div>
+
   <script>
     document.getElementById('formVerificar').addEventListener('submit', (e) => {
       e.preventDefault();
       const dni = document.getElementById('dni').value.trim();
       const resultado = document.getElementById('resultado');
-      resultado.innerHTML = '<p>Buscando...</p>';
+      resultado.innerHTML = '<p style="text-align:center;color:#555">🔄 Buscando...</p>';
   
-      // Eliminar script anterior para evitar duplicados
       const oldScript = document.getElementById('data-script');
       if (oldScript) oldScript.remove();
   
-      // Definir función que maneja la respuesta (ahora con múltiples resultados)
       window.handleResponse = (data) => {
-        // Filtrar TODOS los certificados con el DNI ingresado
+        // ✅ Filtrar certificados por DNI y estado Activo
         const certificados = data.filter(c => 
-          String(c.DNI).trim() === String(dni).trim()
+          String(c.DNI || '').trim() === String(dni).trim() &&
+          String(c.Estado || '').trim().toLowerCase() === 'activo'
         );
   
         if (certificados.length === 0) {
           resultado.innerHTML = `
             <div class="error">
               <h3>❌ No encontrado</h3>
-              <p>No se encontró ningún certificado con el DNI <strong>${dni}</strong>.</p>
+              <p>No se encontró ningún certificado <strong>activo</strong> con el DNI <strong>${dni}</strong>.</p>
             </div>
           `;
           return;
         }
   
-        // Generar HTML para cada certificado
-        const itemsHTML = certificados.map((cert, index) => `
+        // ✅ Generar HTML para cada certificado (CORREGIDO: sin template literals anidados)
+        const itemsHTML = certificados.map((cert, index) => {
+          // ✅ Preparar valores fuera del template literal para evitar ReferenceError
+          const nombre = cert.Nombre_Completo || '—';
+          const idCert = cert.ID_Certificado || '—';
+          const fechaRaw = cert.Fecha || '';
+          const fecha = fechaRaw.split ? fechaRaw.split('T')[0] : fechaRaw;
+          const estado = cert.Estado || '—';
+          const pdfName = cert.PDF || '';
+          
+          // ✅ Construir nombre de archivo para download de forma segura
+          const nombreLimpio = (cert.Nombre_Completo || 'certificado').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+          const downloadFileName = `${nombreLimpio}_${idCert}.pdf`;
+          
+          // ✅ URLs
+          const pdfURL = pdfName ? `certificados/${pdfName}` : '#';
+          
+          return `
           <div class="result-item">
             <h4>📄 Certificado #${index + 1}</h4>
-            <p><strong>Nombre:</strong> ${cert.Nombre_Completo || '—'}</p>
-            <p><strong>ID:</strong> ${cert.ID_Certificado || '—'}</p>
-            <p><strong>Fecha:</strong> ${(cert.Fecha || '').split('T')[0] || '—'}</p>
-            <p><strong>Estado:</strong> ${cert.Estado || '—'}</p>
+            <p><strong>Nombre:</strong> ${nombre}</p>
+            <p><strong>ID:</strong> ${idCert}</p>
+            <p><strong>Fecha:</strong> ${fecha || '—'}</p>
+            <p><strong>Estado:</strong> <span style="color:${estado==='Activo'?'#38a169':'#e53e3e'}">${estado}</span></p>
             <div class="btn-group">
-              <a href="certificados/${cert.PDF}" target="_blank" class="btn-ver">Ver certificado</a>
-              <a href="https://asociacion-topografos.github.io/verificar-certificado/certificados/${cert.PDF}" 
-                 download="${cert.Nombre_Completo?.replace(/\s+/g, '_') || 'certificado'}_${cert.ID_Certificado}.pdf" 
-                 class="btn-descargar">Descargar certificado</a>
+              <a href="${pdfURL}" target="_blank" class="btn-ver">👁️ Ver certificado</a>
+              ${pdfName ? `<a href="${pdfURL}" download="${downloadFileName}" class="btn-descargar">⬇️ Descargar</a>` : ''}
             </div>
           </div>
-        `).join('');
+          `;
+        }).join('');
   
         resultado.innerHTML = `
           <div class="result">
@@ -81,16 +98,21 @@
         `;
       };
   
-      // Añadir el script dinámicamente (corregido: sin espacio al inicio de la URL)
+      // ✅ Cargar datos desde Apps Script con JSONP
       const script = document.createElement('script');
       script.id = 'data-script';
       script.src = `https://script.google.com/macros/s/AKfycbwpwqAIh7cn2Vhumwl-y3eB6MBnzP3VuA-xvWWcdEJD8twnGzj49P85mGH7NL23YuAG6A/exec?callback=handleResponse`;
       document.head.appendChild(script);
     });
+    
+    // ✅ Validación en tiempo real: solo números
+    document.getElementById('dni').addEventListener('input', function(e) {
+      this.value = this.value.replace(/\D/g, '').slice(0, 8);
+    });
   </script>
-  
 </body>
-</html> 
+</html>
+
 
 
 
