@@ -8,7 +8,6 @@
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" as="style">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    /* ✅ CSS crítico inline para carga instantánea */
     *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Roboto',sans-serif;background:#f5f7fa;color:#333;line-height:1.6;min-height:100vh}.container{max-width:800px;margin:0 auto;padding:20px}.header{text-align:center;padding:30px 0;background:linear-gradient(135deg,#1a3a6c,#2c5282);color:#fff;border-radius:12px;margin-bottom:30px}.header img{height:90px;margin-bottom:15px}.header h1{font-size:1.8rem;font-weight:700}.content{background:#fff;padding:25px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08)}.subtitle{text-align:center;color:#555;margin-bottom:25px;font-size:1.1rem}.form-group{display:flex;gap:10px;flex-wrap:wrap}#dni{flex:1;min-width:200px;padding:12px 15px;border:2px solid #ddd;border-radius:8px;font-size:1rem}#dni:focus{outline:none;border-color:#2c5282}button{background:#2c5282;color:#fff;border:none;padding:12px 25px;border-radius:8px;font-weight:500;cursor:pointer;transition:background .3s}button:hover{background:#1a3a6c}button:disabled{background:#ccc;cursor:not-allowed}#resultado{margin-top:25px}.result{background:#f0f9ff;border-left:4px solid #3182ce;padding:15px;border-radius:0 8px 8px 0}.error{background:#fff5f5;border-left:4px solid #e53e3e;padding:15px;border-radius:0 8px 8px 0}.result-item{background:#fff;padding:15px;margin:15px 0;border-radius:8px;border:1px solid #eee}.result-item h4{color:#2c5282;margin-bottom:10px}.result-item p{margin:5px 0;color:#444}.btn-group{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}.btn-ver{background:#3182ce;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:500;display:inline-block}.btn-descargar{background:#38a169;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:500;display:inline-block}.hash-code{background:#edf2f7;padding:3px 8px;border-radius:4px;font-family:monospace;font-size:.85rem}.loader{border:4px solid #f3f3f3;border-top:4px solid #2c5282;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:20px auto}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}.hash-badge{background:#edf2f7;padding:6px 12px;border-radius:6px;font-family:monospace;font-size:.85rem;color:#555;word-break:break-all;display:inline-block;margin-top:5px}.cert-valid{background:linear-gradient(135deg,#f0f9ff,#e6f4f1);border-left:5px solid #3182ce;padding:25px;border-radius:0 12px 12px 0;margin:25px 0}.cert-valid h3{color:#38a169;margin-bottom:15px;font-size:1.3rem}footer{margin-top:35px;text-align:center;color:#777;font-size:.9rem;padding-top:20px;border-top:1px solid #eee}footer a{color:#2c5282;text-decoration:none;font-weight:500}@media(max-width:600px){.form-group{flex-direction:column}button{width:100%}.btn-group{flex-direction:column}.btn-descargar{margin-left:0}}
   </style>
 </head>
@@ -19,7 +18,7 @@
       <h1>🛰️ Verificación LIDAR SLAM</h1>
     </div>
     
-    <!-- ✅ Sección de búsqueda por DNI (solo se muestra si no hay hash en URL) -->
+    <!-- Sección de búsqueda por DNI -->
     <div id="searchSection" class="content">
       <p class="subtitle">Ingrese su DNI para buscar su certificado.</p>
       <form id="formVerificar">
@@ -31,7 +30,7 @@
       <div id="resultado"></div>
     </div>
     
-    <!-- ✅ Sección de validación por hash (solo se muestra si hay hash en URL) -->
+    <!-- Sección de validación por hash (QR) -->
     <div id="hashSection" style="display:none">
       <div id="loading" class="loader"></div>
       <div id="hashContent"></div>
@@ -44,24 +43,24 @@
   </div>
 
   <script>
-    // ⚠️ REEMPLAZA CON TU URL DE APPS SCRIPT
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVnIF_Jz9G_SdurFmGLzCa5xxVfCFDG1WiRcDBptsC0KA8rSJvVy4tW72rjoo2aQMsEQ/exec';
+    // ⚠️ REEMPLAZA CON TU NUEVA URL DE APPS SCRIPT (después de re-desplegar)
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyrxI8TqHlS0CI8D_ibCOdeHKh7CMryoNeNAxa-DkgMl6DpWxO4ONQzpAtGF5ypMRZMHA/exec';
     
-    // ✅ Caché en memoria para evitar consultas repetidas
+    // ✅ Caché en memoria
     const cache = new Map();
     
-    // ✅ Detectar si hay hash en URL (para verificación directa por QR)
+    // ✅ Detectar hash en URL (para verificación directa por QR)
     const urlParams = new URLSearchParams(window.location.search);
     const hash = urlParams.get('hash') || urlParams.get('id');
     
-    // Elementos del DOM
+    // Elementos DOM
     const searchSection = document.getElementById('searchSection');
     const hashSection = document.getElementById('hashSection');
     const hashContent = document.getElementById('hashContent');
     const loading = document.getElementById('loading');
     const footerLink = document.getElementById('footerLink');
     
-    // ✅ Si hay hash en URL → modo validación directa (QR escaneado)
+    // ✅ Si hay hash → modo validación directa (QR escaneado)
     if (hash) {
       searchSection.style.display = 'none';
       hashSection.style.display = 'block';
@@ -71,7 +70,7 @@
     
     // ✅ Si NO hay hash → modo búsqueda por DNI
     if (!hash) {
-      document.getElementById('formVerificar').addEventListener('submit', async (e) => {
+      document.getElementById('formVerificar').addEventListener('submit', (e) => {
         e.preventDefault();
         const dni = document.getElementById('dni').value.trim();
         const resultado = document.getElementById('resultado');
@@ -82,7 +81,7 @@
         btn.textContent = '⏳ Buscando...';
         
         try {
-          // ✅ Usar caché si ya se consultó este DNI
+          // ✅ Usar caché si ya se consultó
           if (cache.has(dni)) {
             mostrarResultados(cache.get(dni), dni);
             btn.disabled = false;
@@ -90,28 +89,47 @@
             return;
           }
           
-          // ✅ Fetch con timeout para evitar bloqueos
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 6000);
+          // ✅ JSONP con etiqueta <script> (NO fetch) - esto evita CORS
+          const script = document.createElement('script');
+          script.src = `${APPS_SCRIPT_URL}?callback=handleResponse`;
+          script.id = 'apps-script-fetch';
           
-          // ✅ Apps Script con JSONP callback
-          const response = await fetch(`${APPS_SCRIPT_URL}?callback=cb`, { signal: controller.signal });
-          clearTimeout(timeout);
+          // Timeout para evitar bloqueos
+          const timeout = setTimeout(() => {
+            script.remove();
+            resultado.innerHTML = `<div class="error"><h3>⚠️ Timeout</h3><p>La consulta tardó demasiado. Intenta de nuevo.</p></div>`;
+            btn.disabled = false;
+            btn.textContent = '🔍 Buscar';
+          }, 8000);
           
-          if (!response.ok) throw new Error('HTTP ' + response.status);
+          // ✅ Callback global para JSONP
+          window.handleResponse = (data) => {
+            clearTimeout(timeout);
+            script.remove();
+            delete window.handleResponse;
+            
+            // Guardar en caché y mostrar
+            cache.set(dni, data || []);
+            mostrarResultados(data || [], dni);
+            btn.disabled = false;
+            btn.textContent = '🔍 Buscar';
+          };
           
-          const text = await response.text();
-          const jsonMatch = text.match(/\(([\s\S]*)\);?$/);
-          const data = jsonMatch ? JSON.parse(jsonMatch[1]) : [];
+          // Manejar errores de carga del script
+          script.onerror = () => {
+            clearTimeout(timeout);
+            script.remove();
+            delete window.handleResponse;
+            resultado.innerHTML = `<div class="error"><h3>❌ Error de conexión</h3><p>No se pudo conectar con la base de datos. Verifica tu conexión o intenta más tarde.</p></div>`;
+            btn.disabled = false;
+            btn.textContent = '🔍 Buscar';
+          };
           
-          // ✅ Guardar en caché y mostrar resultados
-          cache.set(dni, data);
-          mostrarResultados(data, dni);
+          document.head.appendChild(script);
           
         } catch (err) {
           console.error('❌ Error:', err);
-          resultado.innerHTML = `<div class="error"><h3>⚠️ Error</h3><p>${err.message.includes('abort') ? 'Tiempo de espera agotado' : 'No se pudo conectar'}. Intenta de nuevo.</p></div>`;
-        } finally {
+          resultado.innerHTML = `<div class="error"><h3>⚠️ Error</h3><p>Ocurrió un error inesperado. Intenta de nuevo.</p></div>`;
           btn.disabled = false;
           btn.textContent = '🔍 Buscar';
         }
@@ -156,6 +174,7 @@
           <p><strong>Nombre:</strong> ${cert.Nombre_Completo||'—'}</p>
           <p><strong>Evento:</strong> ${cert.Evento||'—'}</p>
           <p><strong>Fecha:</strong> ${fecha}</p>
+          <p><strong>Modalidad:</strong> ${cert.Modalidad||'—'}</p>
           <p><strong>Estado:</strong> <span style="color:${cert.Estado==='Activo'?'#38a169':'#e53e3e'};font-weight:500">${cert.Estado||'—'}</span></p>
           <div class="btn-group">
             <a href="${pdfURL}" target="_blank" class="btn-ver">👁️ Ver Certificado</a>
@@ -175,58 +194,77 @@
     function validarPorHash(hashBuscado) {
       hashContent.innerHTML = `<p style="text-align:center;color:#666;margin:20px 0">Validando: <span class="hash-badge">${hashBuscado}</span></p>`;
       
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6000);
+      // ✅ JSONP con etiqueta <script> (NO fetch)
+      const script = document.createElement('script');
+      script.src = `${APPS_SCRIPT_URL}?callback=handleHashResponse`;
+      script.id = 'apps-script-hash';
       
-      fetch(`${APPS_SCRIPT_URL}?callback=cb`, { signal: controller.signal })
-        .then(res => res.text())
-        .then(text => {
-          clearTimeout(timeout);
-          const jsonMatch = text.match(/\(([\s\S]*)\);?$/);
-          const data = jsonMatch ? JSON.parse(jsonMatch[1]) : [];
-          
-          // ✅ Búsqueda optimizada: break al encontrar coincidencia exacta
-          const cert = (data || []).find(c => {
-            const h = String(c.QR_Code_Hash || c.ID_Certificado || '').trim();
-            return h === hashBuscado.trim() && String(c.Estado).trim().toLowerCase() === 'activo';
-          });
-          
-          if (!cert) {
-            loading.style.display = 'none';
-            hashContent.innerHTML = `<div class="error"><h3>❌ Certificado No Válido</h3><p>No se encontró un certificado activo con este hash.</p><p style="margin-top:20px"><a href="index.html" class="btn-ver">Volver al buscador</a></p></div>`;
-            return;
-          }
-          
-          // Formatear fecha
-          const fecha = cert.Fecha ? (cert.Fecha instanceof Date ? cert.Fecha.toLocaleDateString('es-PE') : String(cert.Fecha).split('T')[0]) : '—';
-          const pdfURL = cert.PDF ? `certificados/${cert.PDF}` : '#';
-          
+      const timeout = setTimeout(() => {
+        script.remove();
+        loading.style.display = 'none';
+        hashContent.innerHTML = `<div class="error"><h3>⚠️ Timeout</h3><p>La consulta tardó demasiado. <a href="index.html">Intentar de nuevo</a></p></div>`;
+      }, 8000);
+      
+      // ✅ Callback global para JSONP
+      window.handleHashResponse = (data) => {
+        clearTimeout(timeout);
+        script.remove();
+        delete window.handleHashResponse;
+        
+        if (!data || !Array.isArray(data)) {
           loading.style.display = 'none';
-          hashContent.innerHTML = `
-            <div class="cert-valid">
-              <h3>✅ Certificado Válido</h3>
-              <div class="cert-info">
-                <p><strong>ID:</strong> ${cert.ID_Certificado||'—'}</p>
-                <p><strong>Nombre:</strong> ${cert.Nombre_Completo||'—'}</p>
-                <p><strong>DNI:</strong> ${cert.DNI||'—'}</p>
-                <p><strong>Evento:</strong> ${cert.Evento||'—'}</p>
-                <p><strong>Fecha:</strong> ${fecha}</p>
-                <p><strong>Estado:</strong> <span style="color:#38a169;font-weight:600">${cert.Estado}</span></p>
-                <p><strong>Hash:</strong><br><span class="hash-badge">${cert.QR_Code_Hash||cert.ID_Certificado}</span></p>
-              </div>
-              ${cert.PDF ? `<div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap"><a href="${pdfURL}" target="_blank" class="btn-ver">👁️ Ver PDF</a><a href="${pdfURL}" download class="btn-ver" style="background:transparent;border:2px solid #2c5282;color:#2c5282">⬇️ Descargar</a></div>` : ''}
-            </div>`;
-        })
-        .catch(err => {
-          clearTimeout(timeout);
-          console.error('❌ Error:', err);
-          loading.style.display = 'none';
-          hashContent.innerHTML = `<div class="error"><h3>❌ Error</h3><p>${err.message.includes('abort') ? 'Tiempo de espera agotado' : 'No se pudo conectar'}. <a href="index.html">Intentar de nuevo</a></p></div>`;
+          hashContent.innerHTML = `<div class="error"><h3>❌ Error de formato</h3><p>La base de datos no respondió correctamente.</p><p style="margin-top:20px"><a href="index.html" class="btn-ver">Volver</a></p></div>`;
+          return;
+        }
+        
+        // ✅ Búsqueda optimizada: break al encontrar
+        const cert = data.find(c => {
+          const h = String(c.QR_Code_Hash || c.ID_Certificado || '').trim();
+          return h === hashBuscado.trim() && String(c.Estado).trim().toLowerCase() === 'activo';
         });
+        
+        if (!cert) {
+          loading.style.display = 'none';
+          hashContent.innerHTML = `<div class="error"><h3>❌ Certificado No Válido</h3><p>No se encontró un certificado activo con este hash.</p><p style="margin-top:20px"><a href="index.html" class="btn-ver">Volver al buscador</a></p></div>`;
+          return;
+        }
+        
+        // Formatear fecha
+        const fecha = cert.Fecha ? (cert.Fecha instanceof Date ? cert.Fecha.toLocaleDateString('es-PE') : String(cert.Fecha).split('T')[0]) : '—';
+        const pdfURL = cert.PDF ? `certificados/${cert.PDF}` : '#';
+        
+        loading.style.display = 'none';
+        hashContent.innerHTML = `
+          <div class="cert-valid">
+            <h3>✅ Certificado Válido</h3>
+            <div class="cert-info">
+              <p><strong>ID:</strong> ${cert.ID_Certificado||'—'}</p>
+              <p><strong>Nombre:</strong> ${cert.Nombre_Completo||'—'}</p>
+              <p><strong>DNI:</strong> ${cert.DNI||'—'}</p>
+              <p><strong>Evento:</strong> ${cert.Evento||'—'}</p>
+              <p><strong>Fecha:</strong> ${fecha}</p>
+              <p><strong>Modalidad:</strong> ${cert.Modalidad||'—'}</p>
+              <p><strong>Estado:</strong> <span style="color:#38a169;font-weight:600">${cert.Estado}</span></p>
+              <p><strong>Hash:</strong><br><span class="hash-badge">${cert.QR_Code_Hash||cert.ID_Certificado}</span></p>
+            </div>
+            ${cert.PDF ? `<div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap"><a href="${pdfURL}" target="_blank" class="btn-ver">👁️ Ver PDF</a><a href="${pdfURL}" download class="btn-ver" style="background:transparent;border:2px solid #2c5282;color:#2c5282">⬇️ Descargar</a></div>` : ''}
+          </div>`;
+      };
+      
+      script.onerror = () => {
+        clearTimeout(timeout);
+        script.remove();
+        delete window.handleHashResponse;
+        loading.style.display = 'none';
+        hashContent.innerHTML = `<div class="error"><h3>❌ Error de conexión</h3><p>No se pudo conectar con la base de datos. <a href="index.html">Intentar de nuevo</a></p></div>`;
+      };
+      
+      document.head.appendChild(script);
     }
   </script>
 </body>
 </html>
+
 
 
 
