@@ -1,13 +1,31 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Validando | LIDAR SLAM</title>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" as="style">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Validando Certificado | LIDAR SLAM</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Roboto',sans-serif;background:#f5f7fa;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}.container{max-width:700px;width:100%;background:#fff;padding:35px;border-radius:16px;box-shadow:0 4px 25px rgba(0,0,0,.1)}.header{text-align:center;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #f0f0f0}.header h1{color:#1a3a6c;font-size:1.6rem}.loader{border:4px solid #f3f3f3;border-top:4px solid #2c5282;border-radius:50%;width:45px;height:45px;animation:spin 1s linear infinite;margin:30px auto}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}.result{background:linear-gradient(135deg,#f0f9ff,#e6f4f1);border-left:5px solid #3182ce;padding:25px;border-radius:0 12px 12px 0;margin:25px 0}.result h3{color:#38a169;margin-bottom:15px;font-size:1.3rem}.error{background:linear-gradient(135deg,#fff5f5,#ffeaea);border-left:5px solid #e53e3e;padding:25px;border-radius:0 12px 12px 0;margin:25px 0}.error h3{color:#e53e3e;margin-bottom:15px;font-size:1.3rem}.cert-info p{margin:10px 0;color:#444}.cert-info strong{color:#2c5282}.btn{display:inline-block;margin-top:20px;padding:12px 28px;background:#2c5282;color:#fff;text-decoration:none;border-radius:8px;font-weight:500;transition:background .3s}.btn:hover{background:#1a3a6c}.btn-outline{background:transparent;border:2px solid #2c5282;color:#2c5282;margin-left:10px}.btn-outline:hover{background:#2c5282;color:#fff}.hash-badge{background:#edf2f7;padding:6px 12px;border-radius:6px;font-family:monospace;font-size:.85rem;color:#555;word-break:break-all;display:inline-block;margin-top:5px}.btn-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}footer{margin-top:35px;text-align:center;color:#777;font-size:.9rem}footer a{color:#2c5282;text-decoration:none}@media(max-width:600px){.btn-group{flex-direction:column}.btn-outline{margin-left:0;margin-top:10px}}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Roboto', sans-serif; background: #f5f7fa; color: #333; line-height: 1.6; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { max-width: 700px; width: 100%; background: white; padding: 35px; border-radius: 16px; box-shadow: 0 4px 25px rgba(0,0,0,0.1); }
+    .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f0f0f0; }
+    .header h1 { color: #1a3a6c; font-size: 1.6rem; margin-top: 10px; }
+    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2c5282; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 30px auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .result { background: linear-gradient(135deg, #f0f9ff, #e6f4f1); border-left: 5px solid #3182ce; padding: 25px; border-radius: 0 12px 12px 0; margin: 25px 0; }
+    .result h3 { color: #38a169; margin-bottom: 15px; font-size: 1.3rem; }
+    .error { background: linear-gradient(135deg, #fff5f5, #ffeaea); border-left: 5px solid #e53e3e; padding: 25px; border-radius: 0 12px 12px 0; margin: 25px 0; }
+    .error h3 { color: #e53e3e; margin-bottom: 15px; font-size: 1.3rem; }
+    .cert-info p { margin: 10px 0; color: #444; font-size: 0.95rem; }
+    .cert-info strong { color: #2c5282; }
+    .btn { display: inline-block; margin-top: 20px; padding: 12px 28px; background: linear-gradient(135deg, #2c5282, #1a3a6c); color: white; text-decoration: none; border-radius: 8px; font-weight: 500; }
+    .btn:hover { background: #1a3a6c; }
+    .hash-badge { background: #edf2f7; padding: 6px 12px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 0.85rem; color: #555; word-break: break-all; display: inline-block; margin-top: 5px; }
+    .debug-info { background: #f8fafc; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 0.85rem; color: #666; }
+    .debug-info code { background: #edf2f7; padding: 2px 6px; border-radius: 4px; }
+    footer { margin-top: 35px; text-align: center; color: #777; font-size: 0.9rem; padding-top: 20px; border-top: 1px solid #eee; }
+    footer a { color: #2c5282; text-decoration: none; font-weight: 500; }
   </style>
 </head>
 <body>
@@ -20,91 +38,132 @@
     <div id="content"></div>
     <footer>
       <p>© 2026 LIDAR SLAM</p>
-      <p style="margin-top:10px"><a href="index.html">← Buscar por DNI</a></p>
+      <p style="margin-top: 10px;"><a href="index.html">← Buscar por DNI</a></p>
     </footer>
   </div>
 
   <script>
-    // ⚠️ REEMPLAZA CON TU URL DE SHEETDB
-    const API_URL = 'https://sheetdb.io/api/v1/bu9mzx9wsqbt6';
-    
+    // ⚠️ REEMPLAZA CON TU URL DE APPS SCRIPT
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyVg_Aq71zRt8xm0K1NcuJ2wIHOw2VgKEQmlZ2T0aYExEeOI3Mb-oFuPEvaAyCFqg6PDA/exec';
+
     const urlParams = new URLSearchParams(window.location.search);
-    const hash = urlParams.get('hash');
+    const hash = urlParams.get('hash') || urlParams.get('id');
     const content = document.getElementById('content');
     const loading = document.getElementById('loading');
 
+    console.log('🔍 Hash en URL:', hash);
+
     if (!hash) {
       loading.style.display = 'none';
-      content.innerHTML = `<div class="error"><h3>⚠️ URL inválida</h3><p>No se proporcionó un hash de verificación.</p><p style="margin-top:15px"><a href="index.html" class="btn">Ir al buscador</a></p></div>`;
+      content.innerHTML = `
+        <div class="error">
+          <h3>⚠️ Parámetro Inválido</h3>
+          <p>No se proporcionó un hash de verificación en la URL.</p>
+          <p style="margin-top: 15px;"><a href="index.html" class="btn">Ir al Buscador por DNI</a></p>
+        </div>
+      `;
     } else {
-      content.innerHTML = `<p style="text-align:center;color:#666;margin:20px 0">Validando: <span class="hash-badge">${hash}</span></p>`;
+      content.innerHTML = `<p style="text-align: center; color: #666; margin: 20px 0;">Validando hash: <span class="hash-badge">${hash}</span></p>`;
       
-      // ✅ Fetch optimizado con timeout
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6000);
-      
-      fetch(`${API_URL}/search/QR_Code_Hash/${encodeURIComponent(hash)}?Estado=Activo`, {
-        signal: controller.signal,
-        headers: { 'Accept': 'application/json' }
-      })
-        .then(async res => {
-          clearTimeout(timeout);
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          const data = await res.json();
-          const certificados = Array.isArray(data) ? data : [data].filter(d => d);
-          validarHash(certificados, hash);
+      fetch(`${APPS_SCRIPT_URL}?callback=handleHashResponse`)
+        .then(res => res.text())
+        .then(text => {
+          console.log('📦 Respuesta raw:', text.substring(0, 500));
+          const jsonMatch = text.match(/\(([\s\S]*)\);?$/);
+          const data = jsonMatch ? JSON.parse(jsonMatch[1]) : JSON.parse(text);
+          console.log('📊 Datos parseados:', data);
+          console.log('📊 Total registros:', data.length);
+          if (data.length > 0) {
+            console.log('📊 Primer registro:', data[0]);
+            console.log('📊 Columnas disponibles:', Object.keys(data[0]));
+          }
+          handleHashResponse(data);
         })
         .catch(err => {
-          clearTimeout(timeout);
-          console.error('❌ Error:', err);
           loading.style.display = 'none';
-          content.innerHTML = `<div class="error"><h3>❌ Error</h3><p>${err.message.includes('abort') ? 'Tiempo de espera agotado' : 'No se pudo conectar'}. <a href="index.html">Intentar de nuevo</a></p></div>`;
+          console.error('❌ Error:', err);
+          content.innerHTML = `<div class="error"><h3>❌ Error de Conexión</h3><p>${err.message}</p><p style="margin-top: 15px;"><a href="index.html" class="btn">Volver al Inicio</a></p></div>`;
         });
     }
 
-    function validarHash(certificados, hashBuscado) {
+    function handleHashResponse(data) {
       loading.style.display = 'none';
       
-      // ✅ Búsqueda optimizada: break al encontrar coincidencia exacta
-      const cert = certificados.find(c => {
-        const h = String(c.QR_Code_Hash || c.ID_Certificado || '').trim();
-        return h === hashBuscado.trim() && String(c.Estado).trim().toLowerCase() === 'activo';
+      if (!data || !Array.isArray(data)) {
+        content.innerHTML = `<div class="error"><h3>❌ Error de Formato</h3><p>La respuesta de la base de datos no tiene el formato esperado.</p></div>`;
+        return;
+      }
+      
+      // 🔍 Debug: mostrar todos los hashes en la base de datos
+      const todosLosHashes = data.map(c => c.QR_Code_Hash || c.ID_Certificado).filter(h => h);
+      console.log('🔐 Todos los hashes en Sheets:', todosLosHashes);
+      console.log('🔐 Hash buscado:', hash);
+      
+      const certificado = data.find(c => {
+        const hashCert = String(c.QR_Code_Hash || c.ID_Certificado || '').trim();
+        const hashBuscado = String(hash).trim();
+        const estado = String(c.Estado || '').trim().toLowerCase();
+        
+        console.log('🔎 Comparando:', { hashCert, hashBuscado, estado, match: hashCert === hashBuscado && estado === 'activo' });
+        
+        return hashCert === hashBuscado && estado === 'activo';
       });
 
-      if (!cert) {
-        content.innerHTML = `<div class="error"><h3>❌ Certificado No Válido</h3><p>No se encontró un certificado activo con este hash.</p><p style="margin-top:20px"><a href="index.html" class="btn">Volver al buscador</a></p></div>`;
+      if (!certificado) {
+        // Mostrar información de debug para el usuario
+        content.innerHTML = `
+          <div class="error">
+            <h3>❌ Certificado No Válido</h3>
+            <p>No se encontró un certificado <strong>activo</strong> con este hash de verificación.</p>
+            <div class="debug-info">
+              <p><strong>Hash buscado:</strong> <code>${hash}</code></p>
+              <p><strong>Total registros en Sheets:</strong> <code>${data.length}</code></p>
+              <p><strong>Registros con QR_Code_Hash:</strong> <code>${data.filter(c => c.QR_Code_Hash).length}</code></p>
+              <p><strong>Posibles causas:</strong></p>
+              <ul style="margin-top: 10px; padding-left: 20px;">
+                <li>El hash en la URL no coincide con el de Google Sheets</li>
+                <li>El certificado tiene Estado diferente a "Activo"</li>
+                <li>La columna se llama diferente en Sheets (ej: "QR_Code_Hash " con espacio)</li>
+              </ul>
+            </div>
+            <p style="margin-top: 20px;"><a href="index.html" class="btn">Volver al Buscador por DNI</a></p>
+          </div>
+        `;
         return;
       }
 
-      // Formatear fecha
-      const fecha = cert.Fecha ? (cert.Fecha instanceof Date ? cert.Fecha.toLocaleDateString('es-PE') : String(cert.Fecha).split('T')[0]) : '—';
-      const pdfURL = cert.PDF ? `certificados/${cert.PDF}` : '#';
-      const hashMostrar = cert.QR_Code_Hash || cert.ID_Certificado;
+      let fechaFmt = certificado.Fecha;
+      if (fechaFmt instanceof Date) fechaFmt = fechaFmt.toLocaleDateString('es-PE');
+      else if (typeof fechaFmt === 'string' && fechaFmt.includes('T')) fechaFmt = fechaFmt.split('T')[0];
+
+      const pdfURL = certificado.PDF ? `certificados/${certificado.PDF}` : '#';
 
       content.innerHTML = `
         <div class="result">
           <h3>✅ Certificado Válido</h3>
           <div class="cert-info">
-            <p><strong>ID Certificado:</strong> ${cert.ID_Certificado||'—'}</p>
-            <p><strong>Nombre:</strong> ${cert.Nombre_Completo||'—'}</p>
-            <p><strong>DNI:</strong> ${cert.DNI||'—'}</p>
-            <p><strong>Evento:</strong> ${cert.Evento||'—'}</p>
-            <p><strong>Fecha:</strong> ${fecha}</p>
-            <p><strong>Modalidad:</strong> ${cert.Modalidad||'—'}</p>
-            <p><strong>Estado:</strong> <span style="color:#38a169;font-weight:600">${cert.Estado}</span></p>
-            <p><strong>Hash de Verificación:</strong><br><span class="hash-badge">${hashMostrar}</span></p>
+            <p><strong>ID Certificado:</strong> ${certificado.ID_Certificado || '—'}</p>
+            <p><strong>Nombre:</strong> ${certificado.Nombre_Completo || '—'}</p>
+            <p><strong>DNI:</strong> ${certificado.DNI || '—'}</p>
+            <p><strong>Evento:</strong> ${certificado.Evento || '—'}</p>
+            <p><strong>Fecha:</strong> ${fechaFmt || '—'}</p>
+            <p><strong>Modalidad:</strong> ${certificado.Modalidad || '—'}</p>
+            <p><strong>Estado:</strong> <span style="color: #38a169; font-weight: 600;">${certificado.Estado}</span></p>
+            <p><strong>Hash QR:</strong><br><span class="hash-badge">${certificado.QR_Code_Hash || certificado.ID_Certificado}</span></p>
           </div>
-          ${cert.PDF ? `
-            <div class="btn-group">
+          ${certificado.PDF ? `
+            <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
               <a href="${pdfURL}" target="_blank" class="btn">👁️ Ver PDF</a>
-              <a href="${pdfURL}" download class="btn btn-outline">⬇️ Descargar PDF</a>
+              <a href="${pdfURL}" download class="btn" style="background: transparent; border: 2px solid #2c5282; color: #2c5282;">⬇️ Descargar</a>
             </div>
           ` : ''}
-        </div>`;
+        </div>
+      `;
     }
   </script>
 </body>
 </html>
+
 
 
 
