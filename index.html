@@ -195,7 +195,7 @@
       activos.forEach((cert, index) => {
         // ✅ Preparar valores con formateo seguro (EVITA ReferenceError)
         const nombre = cert.Nombre_Completo || '—';
-        const idCert = cert.ID_Certificado || '—';
+        const hashCert = cert.QR_Code_Hash || '—';
         const fecha = formatearFecha(cert.Fecha); // ✅ Fecha formateada correctamente
         const estado = cert.Estado || '—';
         const pdfName = cert.PDF || '';
@@ -310,6 +310,7 @@
   </script>
 </body>
 </html>
+
 
 
 
