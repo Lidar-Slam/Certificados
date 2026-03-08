@@ -43,7 +43,7 @@
   </div>
 
   <script>
-    // ⚠️ REEMPLAZA CON TU URL DE APPS SCRIPT
+    // ⚠️ REEMPLAZA CON TU URL DE APPS SCRIPT (sin espacios al final)
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzL6qGZJvemn6Oi9QfA03i2bLarfFSL9fwInnIY55ypzLJGbZlWQNYG0NPXp8stIoJlfQ/exec';
     
     // ✅ Caché en memoria para evitar consultas repetidas
@@ -60,25 +60,21 @@
     const loading = document.getElementById('loading');
     const footerLink = document.getElementById('footerLink');
     
-    // ✅ Función para formatear fechas desde Google Sheets (soluciona "Mon Feb 09 2026...")
+    // ✅ Función para formatear fechas desde Google Sheets
     function formatearFecha(fecha) {
       if (!fecha) return '—';
-      // Si es objeto Date (como devuelve Apps Script)
       if (fecha instanceof Date) {
         return fecha.toLocaleDateString('es-PE', {
           day: '2-digit', month: '2-digit', year: 'numeric'
-        }); // Ej: "09/02/2026"
+        });
       }
-      // Si es string ISO: "2026-02-09T00:00:00.000Z"
       if (typeof fecha === 'string' && fecha.includes('T')) {
         const [year, month, day] = fecha.split('T')[0].split('-');
         return `${day}/${month}/${year}`;
       }
-      // Si ya es string con formato: "09/02/2026"
       if (typeof fecha === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) {
         return fecha;
       }
-      // Fallback: intentar parsear cualquier string
       try {
         const d = new Date(fecha);
         if (!isNaN(d.getTime())) return d.toLocaleDateString('es-PE');
@@ -107,7 +103,6 @@
         btn.textContent = '⏳ Buscando...';
         
         try {
-          // ✅ Usar caché si ya se consultó
           if (cache.has(dni)) {
             mostrarResultados(cache.get(dni), dni);
             btn.disabled = false;
@@ -115,12 +110,11 @@
             return;
           }
           
-          // ✅ JSONP con etiqueta <script> (NO fetch) - evita CORS con Apps Script
+          // ✅ JSONP con etiqueta <script> (evita CORS con Apps Script)
           const script = document.createElement('script');
           script.src = `${APPS_SCRIPT_URL}?callback=handleResponse`;
           script.id = 'apps-script-fetch';
           
-          // Timeout para evitar bloqueos
           const timeout = setTimeout(() => {
             script.remove();
             resultado.innerHTML = `<div class="error"><h3>⚠️ Timeout</h3><p>La consulta tardó demasiado. Intenta de nuevo.</p></div>`;
@@ -128,22 +122,18 @@
             btn.textContent = '🔍 Buscar';
           }, 8000);
           
-          // ✅ Callback global para JSONP
           window.handleResponse = (data) => {
             clearTimeout(timeout);
             if (document.getElementById('apps-script-fetch')) {
               document.getElementById('apps-script-fetch').remove();
             }
             delete window.handleResponse;
-            
-            // Guardar en caché y mostrar
             cache.set(dni, data || []);
             mostrarResultados(data || [], dni);
             btn.disabled = false;
             btn.textContent = '🔍 Buscar';
           };
           
-          // Manejar errores de carga del script
           script.onerror = () => {
             clearTimeout(timeout);
             if (document.getElementById('apps-script-fetch')) {
@@ -165,7 +155,6 @@
         }
       });
       
-      // ✅ Validación en tiempo real del DNI: solo números
       document.getElementById('dni').addEventListener('input', function(e) {
         this.value = this.value.replace(/\D/g, '').slice(0, 8);
       });
@@ -175,7 +164,6 @@
     function mostrarResultados(data, dni) {
       const resultado = document.getElementById('resultado');
       
-      // Filtrar certificados activos con ese DNI
       const activos = (data || []).filter(c => 
         c && String(c.DNI || '').trim() === String(dni).trim() && 
         String(c.Estado || '').trim().toLowerCase() === 'activo'
@@ -186,28 +174,32 @@
         return;
       }
       
-      // ✅ Renderizado optimizado con DocumentFragment
       const fragment = document.createDocumentFragment();
       const container = document.createElement('div');
       container.className = 'result';
       container.innerHTML = `<h3>✅ ${activos.length} certificado${activos.length>1?'s':''} encontrado${activos.length>1?'s':''}</h3>`;
       
       activos.forEach((cert, index) => {
-        // ✅ Preparar valores con formateo seguro (EVITA ReferenceError)
+        // ✅ Preparar valores CON HASH PARA URL DE PDF
         const nombre = cert.Nombre_Completo || '—';
-        const hashCert = cert.QR_Code_Hash || '—';
-        const fecha = formatearFecha(cert.Fecha); // ✅ Fecha formateada correctamente
+        const idCert = cert.ID_Certificado || '—';
+        // ✅ USAR QR_Code_Hash como nombre de archivo del PDF
+        const hashCert = (cert.QR_Code_Hash && String(cert.QR_Code_Hash).trim()) 
+          ? String(cert.QR_Code_Hash).trim() 
+          : String(cert.ID_Certificado || '').trim();
+        const fecha = formatearFecha(cert.Fecha);
         const estado = cert.Estado || '—';
         const pdfName = cert.PDF || '';
         
-        // ✅ Construir nombre de archivo para download de forma segura
+        // ✅ URL del PDF usa el HASH como nombre de archivo
+        // Ej: certificados/LID-HASH-41493891.pdf
+        const pdfURL = hashCert ? `certificados/${hashCert}.pdf` : '#';
+        
+        // Nombre para download
         const nombreLimpio = (cert.Nombre_Completo || 'certificado')
           .replace(/\s+/g, '_')
           .replace(/[^a-zA-Z0-9_]/g, '');
-        const downloadFileName = `${nombreLimpio}_${idCert}.pdf`;
-        
-        // ✅ URLs
-        const pdfURL = pdfName ? `certificados/${pdfName}` : '#';
+        const downloadFileName = `${nombreLimpio}_${hashCert}.pdf`;
         
         const item = document.createElement('div');
         item.className = 'result-item';
@@ -222,7 +214,7 @@
             <a href="${pdfURL}" target="_blank" class="btn-ver">👁️ Ver Certificado</a>
             ${pdfName ? `<a href="${pdfURL}" download="${downloadFileName}" class="btn-descargar">⬇️ Descargar PDF</a>` : ''}
           </div>
-          ${idCert !== '—' ? `<p style="margin-top:10px;font-size:.85rem;color:#777"><strong>Hash:</strong> <span class="hash-code">${idCert}</span></p>` : ''}
+          ${hashCert !== '—' ? `<p style="margin-top:10px;font-size:.85rem;color:#777"><strong>Hash:</strong> <span class="hash-code">${hashCert}</span></p>` : ''}
         `;
         container.appendChild(item);
       });
@@ -236,7 +228,6 @@
     function validarPorHash(hashBuscado) {
       hashContent.innerHTML = `<p style="text-align:center;color:#666;margin:20px 0">Validando: <span class="hash-badge">${hashBuscado}</span></p>`;
       
-      // ✅ JSONP con etiqueta <script> (NO fetch)
       const script = document.createElement('script');
       script.src = `${APPS_SCRIPT_URL}?callback=handleHashResponse`;
       script.id = 'apps-script-hash';
@@ -247,7 +238,6 @@
         hashContent.innerHTML = `<div class="error"><h3>⚠️ Timeout</h3><p>La consulta tardó demasiado. <a href="index.html">Intentar de nuevo</a></p></div>`;
       }, 8000);
       
-      // ✅ Callback global para JSONP
       window.handleHashResponse = (data) => {
         clearTimeout(timeout);
         if (document.getElementById('apps-script-hash')) {
@@ -261,7 +251,6 @@
           return;
         }
         
-        // ✅ Búsqueda optimizada: break al encontrar coincidencia exacta
         const cert = data.find(c => {
           const h = String(c.QR_Code_Hash || c.ID_Certificado || '').trim();
           return h === hashBuscado.trim() && String(c.Estado || '').trim().toLowerCase() === 'activo';
@@ -273,9 +262,9 @@
           return;
         }
         
-        // Formatear fecha correctamente
         const fecha = formatearFecha(cert.Fecha);
-        const pdfURL = cert.PDF ? `certificados/${cert.PDF}` : '#';
+        // ✅ URL del PDF usa el HASH como nombre de archivo
+        const pdfURL = cert.QR_Code_Hash ? `certificados/${cert.QR_Code_Hash}.pdf` : '#';
         
         loading.style.display = 'none';
         hashContent.innerHTML = `
@@ -310,6 +299,7 @@
   </script>
 </body>
 </html>
+
 
 
 
